@@ -5,6 +5,8 @@
 
 Ядро (`Core/`) — чистый C# без `UnityEngine` (asmdef с `noEngineReferences: true`) по этому тесты можно запускать хоть в Unity, хоть через `dotnet test`.
 
+Подробнее (EN): [архитектура и логика кода](docs/ARCHITECTURE.md), [код-ревью](docs/CODE_REVIEW.md).
+
 ## Как запустить
 
 1. Открыть сцену `Assets/Scenes/rts.unity`, нажать Play.
