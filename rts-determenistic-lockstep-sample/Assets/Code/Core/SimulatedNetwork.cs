@@ -40,9 +40,9 @@ namespace Rts.Lockstep.Code.Core
 
             public void Enqueue(byte[] data)
             {
-                double delay = (_settings.LatencyMs + _random.Next(0, _settings.JitterMs + 1)) / 1000.0;
+                var delay = (_settings.LatencyMs + _random.Next(0, _settings.JitterMs + 1)) / 1000.0;
                 // Ordered delivery: a packet never overtakes the previous one (like TCP head-of-line blocking).
-                double deliverAt = Math.Max(_network.Time + delay, _lastDeliverAt);
+                var deliverAt = Math.Max(_network.Time + delay, _lastDeliverAt);
                 _lastDeliverAt = deliverAt;
                 _inFlight.Enqueue((deliverAt, data));
                 BytesSent += data.Length;

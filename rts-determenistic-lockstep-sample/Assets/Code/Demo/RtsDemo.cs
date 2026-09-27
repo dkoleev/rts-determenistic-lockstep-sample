@@ -1,16 +1,18 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using Rts.Lockstep.Code.Core;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 namespace Rts.Lockstep.Demo.Code.Demo
 {
     public class RtsDemo : MonoBehaviour
     {
-        [Header("Client A link (one-way)")] [SerializeField]
-        private int latencyA = 40;
+        [Header("Client A link (one-way)")] 
+        [SerializeField] private int latencyA = 40;
         [SerializeField] private int jitterA = 10;
-        [Header("Client B link (one-way)")] [SerializeField]
-        private int latencyB = 150;
+        [Header("Client B link (one-way)")] 
+        [SerializeField] private int latencyB = 150;
         [SerializeField] private int jitterB = 50;
 
         private readonly List<string> _log = new();
@@ -18,18 +20,7 @@ namespace Rts.Lockstep.Demo.Code.Demo
         private LockstepServer _server;
         private Slot _a;
         private Slot _b;
-
-        private sealed class Slot
-        {
-            public string Name;
-            public LinkSettings Link;
-            public IChannel ServerSide;
-            public LockstepClient Client;
-            public ClientView View;
-            public long LastBytes;
-            public float BytesPerSecond;
-        }
-
+        
         private void Start()
         {
             _network = new SimulatedNetwork();
@@ -43,9 +34,9 @@ namespace Rts.Lockstep.Demo.Code.Demo
 
             if (FindAnyObjectByType<Light>() == null)
             {
-                var light = new GameObject("Directional Light").AddComponent<Light>();
-                light.type = LightType.Directional;
-                light.transform.rotation = Quaternion.Euler(50, -30, 0);
+                var lightInstance = new GameObject("Directional Light").AddComponent<Light>();
+                lightInstance.type = LightType.Directional;
+                lightInstance.transform.rotation = Quaternion.Euler(50, -30, 0);
             }
 
             // Client B stays out on purpose: press "Join" to see a late join via snapshot.
@@ -53,7 +44,7 @@ namespace Rts.Lockstep.Demo.Code.Demo
             InvokeRepeating(nameof(SampleBandwidth), 1, 1);
         }
 
-        private Slot CreateSlot(string name, LinkSettings link, int seed, Vector3 origin, Rect viewport)
+        private Slot CreateSlot(string slotName, LinkSettings link, int seed, Vector3 origin, Rect viewport)
         {
             _network.Connect(link, seed, out IChannel clientSide, out IChannel serverSide);
             _server.AddConnection(serverSide);
@@ -61,11 +52,11 @@ namespace Rts.Lockstep.Demo.Code.Demo
             var client = new LockstepClient(clientSide);
             client.Log += AddLog;
 
-            var view = new GameObject(name).AddComponent<ClientView>();
+            var view = new GameObject(slotName).AddComponent<ClientView>();
             view.transform.position = origin;
             view.Init(client, viewport);
 
-            return new Slot { Name = name, Link = link, ServerSide = serverSide, Client = client, View = view };
+            return new Slot { Name = slotName, Link = link, ServerSide = serverSide, Client = client, View = view };
         }
 
         private void Update()
@@ -85,7 +76,7 @@ namespace Rts.Lockstep.Demo.Code.Demo
 
         private void SampleBandwidth()
         {
-            foreach (Slot slot in new[] { _a, _b })
+            foreach (var slot in new[] { _a, _b })
             {
                 slot.BytesPerSecond = slot.ServerSide.BytesSent - slot.LastBytes;
                 slot.LastBytes = slot.ServerSide.BytesSent;
@@ -101,7 +92,7 @@ namespace Rts.Lockstep.Demo.Code.Demo
         }
 
         // ---------------------------------------------------------------- debug UI
-
+        [Conditional("DEBUG")]
         private void OnGUI()
         {
             if (_server == null)
@@ -118,6 +109,7 @@ namespace Rts.Lockstep.Demo.Code.Demo
             GUILayout.EndArea();
         }
 
+        [Conditional("DEBUG")]
         private void DrawClientPanel(Slot slot, float x, ref int latency, ref int jitter)
         {
             LockstepClient client = slot.Client;
@@ -131,7 +123,7 @@ namespace Rts.Lockstep.Demo.Code.Demo
             }
             else
             {
-                int behind = _server.World.Tick - client.World.Tick;
+                var behind = _server.World.Tick - client.World.Tick;
                 GUILayout.Label($"{slot.Name} - player {client.PlayerId}");
                 GUILayout.Label($"Tick {client.World.Tick}   ({behind} behind server)");
                 GUILayout.Label($"Buffered frames: {client.BufferedFrames}   Stalls: {client.StallCount}" +
@@ -149,16 +141,17 @@ namespace Rts.Lockstep.Demo.Code.Demo
         }
 
         /// <summary>Scene view: yellow wire spheres = server's (authoritative, slightly ahead) world.</summary>
+        [Conditional("DEBUG")]
         private void OnDrawGizmos()
         {
             if (_server == null)
                 return;
 
             Gizmos.color = Color.yellow;
-            foreach (Slot slot in new[] { _a, _b })
-            foreach (Unit unit in _server.World.Units)
+            foreach (var slot in new[] { _a, _b })
+            foreach (var unit in _server.World.Units)
             {
-                Vector3 local = new Vector3(unit.Position.X.ToFloat(), 0.5f, unit.Position.Y.ToFloat());
+                var local = new Vector3(unit.Position.X.ToFloat(), 0.5f, unit.Position.Y.ToFloat());
                 Gizmos.DrawWireSphere(slot.View.transform.position + local, 0.5f);
             }
         }
