@@ -20,17 +20,30 @@
 
 ## Как это работает
 
-```
- Client A               Server (20 ticks/s)                Client B
-    |                        |                                 |
-    |-- Command(Move) ------>|  pending: [Move A]              |
-    |                        |                                 |
-    |                     tick 41: seal frame                  |
-    |<----- TickFrame 41 [Move A] ---------------------------->|
-    |                        |  Simulation.Step(world, frame)  |
-    | Step(world, frame 41)  |                                 | Step(world, frame 41)
-    |                        |                                 |
-    |-- StateHash(50, X) --->|  X == hash[50] ? ok : Snapshot  |
+```mermaid
+sequenceDiagram
+    autonumber
+    participant A as Client A
+    participant S as Server (20 ticks/s)
+    participant B as Client B
+
+    A->>S: Command(Move)
+    Note over S: pending: [Move A]
+    
+    Note over S: tick 41: seal frame
+    
+    par Broadcast Frame 41
+        S-->>A: TickFrame 41 [Move A]
+    and
+        S-->>B: TickFrame 41 [Move A]
+    end
+
+    Note over S: Simulation.Step(world, frame)
+    Note over A: Step(world, frame 41)
+    Note over B: Step(world, frame 41)
+
+    A->>S: StateHash(50, X)
+    Note over S: X == hash[50] ? ok : Snapshot
 ```
 
 1. **Клиент не применяет свой ввод сам.** Клик превращается в `Command` и уходит на сервер.
