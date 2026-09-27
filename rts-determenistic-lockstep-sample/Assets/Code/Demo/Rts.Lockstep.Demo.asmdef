@@ -1,0 +1,16 @@
+{
+    "name": "Rts.Lockstep.Demo",
+    "rootNamespace": "Rts.Lockstep.Demo",
+    "references": [
+        "GUID:aacb241e4e19ce94c917c7d92ce3a871"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
